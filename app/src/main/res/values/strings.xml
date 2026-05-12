@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Video Journal</string>
+    <string name="record_button">Rec</string>
+    <string name="share_chooser_title">Share video</string>
+    <string name="share_unavailable">No app is available to share this video.</string>
+    <string name="feed_title">Video Journal</string>
+    <plurals name="local_clip_count">
+        <item quantity="one">%d local clip</item>
+        <item quantity="other">%d local clips</item>
+    </plurals>
+    <string name="untitled_clip">Untitled clip</string>
+    <string name="play">Play</string>
+    <string name="share">Share</string>
+    <string name="back">Back</string>
+    <string name="empty_feed_title">No journal clips yet</string>
+    <string name="empty_feed_message">Tap Rec to capture a short video and save it to your local feed.</string>
+    <string name="add_description_title">Add description</string>
+    <string name="optional_note_placeholder">Optional note</string>
+    <string name="save">Save</string>
+    <string name="discard">Discard</string>
+    <string name="camera_permission_required">Camera permission is required to record a journal clip.</string>
+    <string name="camera_unavailable">No camera app is available on this device.</string>
+    <string name="video_file_create_error">Could not create a video file.</string>
+</resources>

@@ -1,0 +1,15 @@
+CREATE TABLE video_entry (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  videoUri TEXT NOT NULL,
+  description TEXT,
+  createdAt INTEGER NOT NULL
+);
+
+selectLatest:
+SELECT *
+FROM video_entry
+ORDER BY createdAt DESC;
+
+insertVideo:
+INSERT INTO video_entry(videoUri, description, createdAt)
+VALUES (?, ?, ?);
