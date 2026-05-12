@@ -52,4 +52,42 @@ class FeedViewModelTest {
 
         assertFalse(viewModel.uiState.value.isPlaying)
     }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun tappingInlineVideo_setsInlinePlayback() = runTest {
+        val repository = FakeVideoJournalRepository()
+        repository.emit(listOf(VideoEntry(1L, "content://one", null, 1L)))
+        val viewModel = FeedViewModel(ObserveVideosUseCase(repository))
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onInlineVideoTapped(1L)
+        advanceUntilIdle()
+
+        assertEquals(1L, viewModel.uiState.value.inlineVideoId)
+        assertTrue(viewModel.uiState.value.isInlinePlaying)
+
+        viewModel.onInlineVideoTapped(1L)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isInlinePlaying)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun openingFullscreen_clearsInlinePlayback() = runTest {
+        val repository = FakeVideoJournalRepository()
+        repository.emit(listOf(VideoEntry(1L, "content://one", null, 1L)))
+        val viewModel = FeedViewModel(ObserveVideosUseCase(repository))
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        viewModel.onInlineVideoTapped(1L)
+        viewModel.onFocusedVideoChanged(1L)
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.uiState.value.inlineVideoId)
+        assertFalse(viewModel.uiState.value.isInlinePlaying)
+    }
 }

@@ -141,6 +141,7 @@ fun FeedScreen(
                     selectedVideoId = video.id
                     feedViewModel.onFocusedVideoChanged(video.id)
                 },
+                onInlineVideoClicked = feedViewModel::onInlineVideoTapped,
                 onShareClicked = shareVideo,
             )
         } else {

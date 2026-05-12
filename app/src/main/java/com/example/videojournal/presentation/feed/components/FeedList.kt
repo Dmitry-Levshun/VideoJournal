@@ -1,6 +1,8 @@
 package com.example.videojournal.presentation.feed.components
 
 import android.graphics.Bitmap
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,10 +39,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 import com.example.videojournal.R
 import com.example.videojournal.common.formatCreatedAt
 import com.example.videojournal.data.local.file.VideoThumbnailLoader
@@ -52,6 +62,7 @@ fun FeedList(
     state: FeedUiState,
     contentPadding: PaddingValues,
     onVideoClicked: (VideoEntry) -> Unit,
+    onInlineVideoClicked: (Long) -> Unit,
     onShareClicked: (VideoEntry) -> Unit,
     thumbnailLoader: VideoThumbnailLoader = koinInject(),
 ) {
@@ -93,7 +104,9 @@ fun FeedList(
         ) { _, video ->
             VideoListItem(
                 video = video,
+                isInlinePlaying = state.inlineVideoId == video.id && state.isInlinePlaying,
                 onClick = { onVideoClicked(video) },
+                onInlineClick = { onInlineVideoClicked(video.id) },
                 onShareClicked = { onShareClicked(video) },
                 thumbnailLoader = thumbnailLoader,
             )
@@ -104,7 +117,9 @@ fun FeedList(
 @Composable
 private fun VideoListItem(
     video: VideoEntry,
+    isInlinePlaying: Boolean,
     onClick: () -> Unit,
+    onInlineClick: () -> Unit,
     onShareClicked: () -> Unit,
     thumbnailLoader: VideoThumbnailLoader,
 ) {
@@ -126,14 +141,22 @@ private fun VideoListItem(
                 modifier = Modifier
                     .size(88.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(Color.Black),
+                    .background(Color.Black)
+                    .clickable(onClick = onInlineClick),
                 contentAlignment = Alignment.Center,
             ) {
-                VideoThumbnail(
-                    videoUri = video.videoUri,
-                    thumbnailLoader = thumbnailLoader,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                if (isInlinePlaying) {
+                    InlineVideoPlayer(
+                        videoUri = video.videoUri,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    VideoThumbnail(
+                        videoUri = video.videoUri,
+                        thumbnailLoader = thumbnailLoader,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -161,6 +184,40 @@ private fun VideoListItem(
             }
         }
     }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+private fun InlineVideoPlayer(
+    videoUri: String,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val player = remember(videoUri) {
+        ExoPlayer.Builder(context).build().apply {
+            repeatMode = ExoPlayer.REPEAT_MODE_ONE
+            setMediaItem(MediaItem.fromUri(videoUri))
+            prepare()
+            play()
+        }
+    }
+
+    DisposableEffect(player) {
+        onDispose { player.release() }
+    }
+
+    AndroidView(
+        modifier = modifier,
+        factory = { viewContext ->
+            PlayerView(viewContext).apply {
+                layoutParams = android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                useController = false
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                this.player = player
+            }
+        },
+        update = { it.player = player },
+    )
 }
 
 @Composable
